@@ -7,6 +7,9 @@ const userRoutes = require("./routes/User");
 const commerceRoutes = require("./routes/Commerce");
 const paiementRoutes = require("./routes/Paiement");
 const reportingRoutes = require("./routes/Reporting");
+const quartierRoutes = require("./routes/Quartier");
+const marcheRoutes = require("./routes/Marche");
+const typeTaxeRoutes = require("./routes/TypeTaxe");
 
 const app = express();
 
@@ -29,6 +32,9 @@ app.use("/api/user", userRoutes);
 app.use("/api/commerce", commerceRoutes);
 app.use("/api/paiement", paiementRoutes);
 app.use("/api/reporting", reportingRoutes);
+app.use("/api/quartier", quartierRoutes);
+app.use("/api/marche", marcheRoutes);
+app.use("/api/typetaxe", typeTaxeRoutes);
 
 // Health check
 app.get("/", (req, res) => {

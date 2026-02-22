@@ -9,5 +9,6 @@ router.post("/confirm/:id", auth, paiementCtrl.confirm);
 router.post("/callback", paiementCtrl.callback); // No auth - called by payment gateway
 router.get("/pending", auth, paiementCtrl.getPending);
 router.get("/history", auth, paiementCtrl.getHistory);
+router.get("/impayes", auth, paiementCtrl.getImpayes);
 
 module.exports = router;
