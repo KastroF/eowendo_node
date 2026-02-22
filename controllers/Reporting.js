@@ -150,10 +150,21 @@ exports.getMarkets = async (req, res) => {
     if (quartier) matchFilter.quartier = quartier;
 
     const marketsData = await Paiement.aggregate([
-      { $match: { ...matchFilter, marche: { $ne: "" } } },
+      { $match: matchFilter },
+      {
+        $addFields: {
+          marcheLabel: {
+            $cond: {
+              if: { $or: [{ $eq: ["$marche", ""] }, { $eq: ["$marche", null] }] },
+              then: "Hors marché",
+              else: "$marche",
+            },
+          },
+        },
+      },
       {
         $group: {
-          _id: "$marche",
+          _id: "$marcheLabel",
           montant: { $sum: "$montant" },
           count: { $sum: 1 },
         },
@@ -208,10 +219,21 @@ exports.getOverview = async (req, res) => {
     const totalPaiements = paidCount + pendingCount;
     const tauxRecouvrement = totalPaiements > 0 ? Math.round(paidCount / totalPaiements * 100) : 0;
 
-    // Markets ranking
+    // Markets ranking (including "Hors marché")
     const marketsData = await Paiement.aggregate([
-      { $match: { ...matchFilter, statut: "payé", marche: { $ne: "" } } },
-      { $group: { _id: "$marche", montant: { $sum: "$montant" }, count: { $sum: 1 } } },
+      { $match: { ...matchFilter, statut: "payé" } },
+      {
+        $addFields: {
+          marcheLabel: {
+            $cond: {
+              if: { $or: [{ $eq: ["$marche", ""] }, { $eq: ["$marche", null] }] },
+              then: "Hors marché",
+              else: "$marche",
+            },
+          },
+        },
+      },
+      { $group: { _id: "$marcheLabel", montant: { $sum: "$montant" }, count: { $sum: 1 } } },
       { $sort: { montant: -1 } },
       { $limit: 5 },
     ]);
