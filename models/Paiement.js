@@ -7,9 +7,11 @@ const paiementSchema = mongoose.Schema({
   montant: { type: Number, required: true },
   modePaiement: {
     type: String,
-    enum: ["mobile_money", "especes", "qr_code"],
+    enum: ["airtel_money", "moov_money", "especes"],
     required: true,
   },
+  telephone: { type: String, default: "" },
+  paymentId: { type: String, default: "" },
   reference: { type: String, default: "" },
   statut: {
     type: String,
