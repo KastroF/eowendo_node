@@ -1,30 +1,36 @@
 const Paiement = require("../models/Paiement");
 const Commerce = require("../models/Commerce");
 
-// Helper: get date range for period
+// Helper: get date range for period (Africa/Libreville = UTC+1)
 function getDateRange(period) {
   const now = new Date();
-  const start = new Date();
+  const TZ = 1; // UTC+1
+  // Compute local date components
+  const local = new Date(now.getTime() + TZ * 3600000);
+  const y = local.getUTCFullYear();
+  const m = local.getUTCMonth();
+  const d = local.getUTCDate();
+  const dow = local.getUTCDay();
+
+  let start;
 
   switch (period) {
     case "jour":
-      start.setHours(0, 0, 0, 0);
+      start = new Date(Date.UTC(y, m, d) - TZ * 3600000);
       break;
-    case "semaine":
-      start.setDate(now.getDate() - now.getDay() + 1); // Monday
-      start.setHours(0, 0, 0, 0);
+    case "semaine": {
+      const day = dow || 7; // Sunday=0 → 7
+      start = new Date(Date.UTC(y, m, d - day + 1) - TZ * 3600000);
       break;
+    }
     case "mois":
-      start.setDate(1);
-      start.setHours(0, 0, 0, 0);
+      start = new Date(Date.UTC(y, m, 1) - TZ * 3600000);
       break;
     case "annee":
-      start.setMonth(0, 1);
-      start.setHours(0, 0, 0, 0);
+      start = new Date(Date.UTC(y, 0, 1) - TZ * 3600000);
       break;
     default:
-      start.setDate(1);
-      start.setHours(0, 0, 0, 0);
+      start = new Date(Date.UTC(y, m, 1) - TZ * 3600000);
   }
 
   return { start, end: now };
@@ -97,21 +103,23 @@ exports.getChart = async (req, res) => {
     let groupBy;
     let labels = [];
 
+    const tz = "Africa/Libreville";
+
     switch (period) {
       case "jour":
-        groupBy = { $hour: "$createdAt" };
+        groupBy = { $hour: { date: "$createdAt", timezone: tz } };
         labels = Array.from({ length: 12 }, (_, i) => `${8 + i}h`);
         break;
       case "semaine":
-        groupBy = { $dayOfWeek: "$createdAt" };
+        groupBy = { $dayOfWeek: { date: "$createdAt", timezone: tz } };
         labels = ["Dim", "Lun", "Mar", "Mer", "Jeu", "Ven", "Sam"];
         break;
       case "mois":
-        groupBy = { $isoWeek: "$createdAt" };
+        groupBy = { $ceil: { $divide: [{ $dayOfMonth: { date: "$createdAt", timezone: tz } }, 7] } };
         labels = ["S1", "S2", "S3", "S4", "S5"];
         break;
       case "annee":
-        groupBy = { $month: "$createdAt" };
+        groupBy = { $month: { date: "$createdAt", timezone: tz } };
         labels = ["J", "F", "M", "A", "M", "J", "J", "A", "S", "O", "N", "D"];
         break;
     }
